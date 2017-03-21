@@ -7,7 +7,25 @@ This GitHub repository aims to show briefly that we can use Fortran 2008 atomic 
 # The three steps of implementing a bi-directional (two-sided) synchronization using atomic subroutines (within the example program):
 
 STEP 1 (executed on image 1): 
-Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to value InitializeSegmentSynchronization on these remote images, and also transmit the image number of the executing image (1) within the same single call to atomic_define.
+Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to value InitializeSegmentSynchronization on these remote images, and also transmit the image number of the executing image (1) within the same single call to atomic_define. The following code snippet is taken from subroutine OOOPimsc_SynchronizeTheInvolvedImages_CA in Module OOOPimsc_admImageStatus_CA.f90:
+```fortran
+  ! this is the first part of the bi-directional synchronization:
+write(*,*) 'step 1: on image', this_image()
+  intImageActivityFlag = OOOPimscEnum_ImageActivityFlag % InitializeSegmentSynchronization
+  call OOOPimsc_subSyncMemory (Object_CA) ! execute sync memory
+  do intCount = 1, intNumberOfImages
+    !
+    intImageNumber = intA_RemoteImageNumbers(intCount)
+    if (intImageNumber .ne. this_image()) then ! (synchronization is only required between distinct images)
+    ! initialize the segment synchronization on the involved remote images:
+      ! pack the ImageActivityFlag enumeration together with this_image():
+      call OOOPimsc_PackEnumValue_ImageActivityFlag (Object_CA, intImageActivityFlag, this_image(), intPackedEnumValue)
+      ! send the packed enum value atomically to the remote image (intImageNumber):
+      call OOOPimscSAElement_atomic_intImageActivityFlag99_CA (Object_CA, intPackedEnumValue, &
+            intImageNumber, logExecuteSyncMemory = .false.) ! do not execute SYNC MEMORY
+    end if
+  end do
+```
 
 STEP 2 (executed on images 2, 3, and 4):
 On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization.

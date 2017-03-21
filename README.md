@@ -68,7 +68,36 @@ write(*,*) 'step 2: on image', this_image()
 ```
 
 STEP 3 (executed on image 1):
-All the involved remote images (2, 3, and 4) have atomically signaled that they are in state WaitForSegmentSynchronization. (The example program does now terminate its's execution. But in real world programming, image 1 would procceed to give further instructions to images 2, 3, and 4 by transmitting values atomically to them).
+All the involved remote images (2, 3, and 4) have atomically signaled that they are in state WaitForSegmentSynchronization, see the last and the following code snippets. (The example program does now terminate its's execution. But in real world programming, image 1 would procceed to give further instructions to images 2, 3, and 4 by transmitting values atomically to them). The next code snippet is taken from subroutine OOOPimsc_SynchronizeTheInvolvedImages_CA in Module OOOPimsc_admImageStatus_CA.f90.
+```fortran
+  !************************************************
+  ! this is the second counter-part of the bi-directional synchronization:
+  ! wait until all the involved remote image(s) do signal that they are in state WaitForSegmentSynchronization:
+  intImageActivityFlag = OOOPimscEnum_ImageActivityFlag % WaitForSegmentSynchronization
+  ! initialize the array elements with .false.:
+  logA_CheckImageStates = .false.
+  !
+  do
+    do intCount = 1, intNumberOfImages
+      !
+      intImageNumber = intA_RemoteImageNumbers(intCount)
+      if (intImageNumber .ne. this_image()) then ! (synchronization is only required between distinct images)
+        if (.not. logA_CheckImageStates(intCount)) then ! only if logA_CheckImageStates for the remote image is still false:
+          if (OOOPimscGAElement_check_atomic_intImageActivityFlag99_CA (OOOPimscImageStatus_CA_1, &
+                           OOOPimscEnum_ImageActivityFlag % WaitForSegmentSynchronization, &
+                           intArrayIndex = intImageNumber, intAdditionalAtomicValue = intSetFromImageNumber)) then
+            logA_CheckImageStates(intCount) = .true. ! the remote image is in state WaitForSegmentSynchronization
+          end if
+        end if
+      end if
+    end do
+    !
+    if (all(logA_CheckImageStates)) exit ! exit the do loop if all involved remote images are in state
+                                         ! WaitForSegmentSynchronization
+  end do
+write(*,*) 'step 3: on image', this_image()
+  !
+```
 
 # Output
 A program run (using 4 coarray images) gives the following output on screen:
@@ -100,27 +129,4 @@ entering execution segment           5 on image           1
 step 3: on image           1
 entering execution segment           6 on image           1
 Execution finished on image           1
-```
-
-# test
-```fortran
-  !
-  do
-    do intCount = 1, intNumberOfImages
-      !
-      intImageNumber = intA_RemoteImageNumbers(intCount)
-      if (intImageNumber .ne. this_image()) then ! (synchronization is only required between distinct images)
-        if (.not. logA_CheckImageStates(intCount)) then ! only if logA_CheckImageStates for the remote image is still false:
-          if (OOOPimscGAElement_check_atomic_intImageActivityFlag99_CA (OOOPimscImageStatus_CA_1, &
-                           OOOPimscEnum_ImageActivityFlag % WaitForSegmentSynchronization, &
-                           intArrayIndex = intImageNumber, intAdditionalAtomicValue = intSetFromImageNumber)) then
-            logA_CheckImageStates(intCount) = .true. ! the remote image is in state WaitForSegmentSynchronization
-          end if
-        end if
-      end if
-    end do
-    !
-    if (all(logA_CheckImageStates)) exit ! exit the do loop if all involved remote images are in state
-                                         ! WaitForSegmentSynchronization
-  end do
 ```

@@ -99,7 +99,8 @@ All the involved remote images (2, 3, and 4) have atomically signaled that they 
     end do
     !
     if (all(logA_CheckImageStates)) exit ! exit the do loop if all involved remote images are in state
-                                         ! WaitForSegmentSynchronization
+                                         ! WaitForSegmentSynchronization 
+    ! (be aware: this would be error prone in real world programming, but it is safe for this example program)
   end do
 write(*,*) 'step 3: on image', this_image()
   !

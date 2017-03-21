@@ -4,11 +4,11 @@ Fortran 2008 coarray programming with unordered execution segments (user-defined
 # Overview
 This GitHub repository aims to show briefly that we can use Fortran 2008 atomic subroutines to develop sophisticated parallel logic codes that operate safely even with user-defined (unordered) execution segments: A simple example program implements a bi-directional (two-sided) synchronization method using atomic subroutines for the required remote data transfers. To do so in a safe manner, the code uses single calls to atomic_define (and atomic_ref) to transmit more than just one atomic value at a time.
 
-The example program runs with 4 coarray images. The code executed on Image 1 aims to initiate a restoring of the segment order among all four images. To do so, it sets the OOOPimscEnum_ImageActivityFlag enumeration atomically to value 'InitializeSegmentSynchronization' on the remote images 2, 3, and 4. Then, the code executed on images 2, 3, and 4 respectively, sets it's own remote enumeration value (on image 1) atomically to value 'WaitForSegmentSynchronization'. See the more detailed explanations with code snippets below.
-See also the explanations in my other GitHub repositories:
-https://github.com/MichaelSiehl/Atomic_Subroutines--Using_Integers_Efficiently
-https://github.com/MichaelSiehl/Atomic_Subroutines--Using_Coarray_Arrays_to_Allow_for_Safe_Remote_Communication
-https://github.com/MichaelSiehl/Atomic_Subroutines--How_to_Encapsulate_Access_to_Them
+The example program runs with 4 coarray images. The code executed on Image 1 aims to initiate a restoring of the segment order among all four images. To do so, it sets the OOOPimscEnum_ImageActivityFlag enumeration atomically to value 'InitializeSegmentSynchronization' on the remote images 2, 3, and 4. Then, the code executed on images 2, 3, and 4 respectively, sets it's own remote enumeration value (on image 1) atomically to value 'WaitForSegmentSynchronization'. See the more detailed explanations with code snippets below.<br />
+See also the explanations in my other GitHub repositories:<br />
+https://github.com/MichaelSiehl/Atomic_Subroutines--Using_Integers_Efficiently<br />
+https://github.com/MichaelSiehl/Atomic_Subroutines--Using_Coarray_Arrays_to_Allow_for_Safe_Remote_Communication<br />
+https://github.com/MichaelSiehl/Atomic_Subroutines--How_to_Encapsulate_Access_to_Them<br />
 
 # The three steps of implementing a bi-directional (two-sided) synchronization using atomic subroutines (within the example program):
 

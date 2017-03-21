@@ -1,6 +1,8 @@
 # Atomic_Subroutines--Using_them_to_implement_a_bi-directional_synchronization
 Fortran 2008 coarray programming with unordered execution segments (user-defined ordering) - Atomic Subroutines: Using them to implement a bi-directional synchronization -- an example program
 
+# Overview
+This GitHub repository aims to show briefly that we can use Fortran 2008 atomic subroutines to develop parallel logic codes that operate safely even with user-defined (unordered) execution segments: A simple example program implements a bi-directional (two-sided) synchronization method using atomic subroutines for the required remote data transfers. To do so in a safe manner, the code uses single calls to atomic_define (and atomic_ref) to transmit more than just one atomic value at a time.
 
 # test
 ```fortran

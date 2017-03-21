@@ -7,7 +7,10 @@ This GitHub repository aims to show briefly that we can use Fortran 2008 atomic 
 # The three steps of implementing a bi-directional (two-sided) synchronization using atomic subroutines within the example program:
 
 STEP 1 (executed on coarray image 1): 
-Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to state InitializeSegmentSynchronization on these remote images.
+Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to value InitializeSegmentSynchronization on these remote images, and also transmit the image number of the executing image (1) within the same single call to atomic_define.
+
+STEP 2 (executed on coarray images 2, 3, and 4):
+On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization.
 
 
 # Output

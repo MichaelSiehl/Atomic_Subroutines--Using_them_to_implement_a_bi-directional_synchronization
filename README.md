@@ -28,7 +28,44 @@ write(*,*) 'step 1: on image', this_image()
 ```
 
 STEP 2 (executed on images 2, 3, and 4):
-On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization.
+On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization. The following code snippets are taken from subroutine IIimma_SYNC_CheckActivityFlag in Module OOOPimma_admImageManager.f90 and from . 
+```fortran
+  do ! check the ImageActivityFlag in local PGAS memory permanently until it has
+     !         value OOOPimscEnum_ImageActivityFlag % ExecutionFinished
+    ! ****************************************
+    ! this is the first counter-part of the bi-directional synchronization:
+    ! execution segment synchronization:
+    if (OOOPimscGAElement_check_atomic_intImageActivityFlag99_CA (OOOPimscImageStatus_CA_1, &
+                       OOOPimscEnum_ImageActivityFlag % InitializeSegmentSynchronization, &
+                       intAdditionalAtomicValue = intSetFromImageNumber)) then
+write(*,*) 'step 2: on image', this_image()
+      ! start the execution segment synchronization on the executing image:
+      call OOOPimsc_Start_SegmentSynchronization_CA (OOOPimscImageStatus_CA_1, intSetFromImageNumber)
+    !
+    else if (OOOPimscGAElement_check_atomic_intImageActivityFlag99_CA (OOOPimscImageStatus_CA_1, &
+                        OOOPimscEnum_ImageActivityFlag % ExecutionFinished)) then
+      write(*,*) 'Execution finished on image', this_image()
+      exit ! exit the loop to finish image execution
+    end if
+    !
+  end do
+```
+```fortran
+  ! ********************************************************
+  ! this is the second part of the bi-directional synchronization:
+  ! (the first part is in routine IIimma_SYNC_CheckActivityFlag)
+  intRemoteImageNumber = intSetFromImageNumber
+  !
+  ! initialize the segment synchronization on the involved images:
+  intImageActivityFlag = OOOPimscEnum_ImageActivityFlag % WaitForSegmentSynchronization
+  !
+  call OOOPimsc_PackEnumValue_ImageActivityFlag (Object_CA, intImageActivityFlag, this_image(), intPackedEnumValue)
+  ! signal to the remote image (image 1) that this executing image is now in state 'WaitForSegmentSychronization':
+  call OOOPimscSAElement_atomic_intImageActivityFlag99_CA (Object_CA, intPackedEnumValue, &
+                         intRemoteImageNumber, intArrayIndex = this_image(), logExecuteSyncMemory = .true.)
+  ! in real world programming, there would be another spin-wait loop synchronization here
+  !
+```
 
 STEP 3 (executed on image 1):
 All the involved remote images (2, 3, and 4) have atomically signaled that they are in state WaitForSegmentSynchronization. (The example program does now terminate its's execution. But in real world programming, image 1 would procceed to give further instructions to images 2, 3, and 4 by transmitting values atomically to them).

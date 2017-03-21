@@ -7,7 +7,7 @@ This GitHub repository aims to show briefly that we can use Fortran 2008 atomic 
 # The three steps of implementing a bi-directional (two-sided) synchronization using atomic subroutines (within the example program):
 
 STEP 1 (executed on image 1): 
-Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to value InitializeSegmentSynchronization on these remote images, and also transmit the image number of the executing image (1) within the same single call to atomic_define. The following code snippet is taken from subroutine OOOPimsc_SynchronizeTheInvolvedImages_CA in Module OOOPimsc_admImageStatus_CA.f90:
+Initiate the segment synchronization on the involved remote images 2, 3, and 4. To do so, set the ImageActivityFlag atomically to value InitializeSegmentSynchronization on these remote images, and also transmit the image number of the executing image (1) within the same single call to atomic_define. The following code snippet is taken from subroutine OOOPimsc_SynchronizeTheInvolvedImages_CA in Module OOOPimsc_admImageStatus_CA.f90. The call to atomic_define is encapsulated in subroutine OOOPimscSAElement_atomic_intImageActivityFlag99_CA.
 ```fortran
   ! this is the first part of the bi-directional synchronization:
 write(*,*) 'step 1: on image', this_image()

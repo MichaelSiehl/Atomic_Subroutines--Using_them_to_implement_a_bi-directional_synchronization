@@ -8,5 +8,3 @@ To run the program:
 
 mpirun -np 4 ./a_gfortran.out
 
-
-Be aware: The code uses Fortran 2015 atomic_add. Thus, the code may only compile with a recent OpenCoarrays version and not with any other compiler yet.

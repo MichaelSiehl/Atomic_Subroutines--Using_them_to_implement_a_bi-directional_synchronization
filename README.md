@@ -36,7 +36,7 @@ write(*,*) 'step 1: on image', this_image()
 ```
 
 STEP 2 (executed on images 2, 3, and 4):
-On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization. The following code snippets are taken from subroutine IIimma_SYNC_CheckActivityFlag in Module OOOPimma_admImageManager.f90 and from subroutine OOOPimsc_Start_SegmentSynchronization_CA in Module OOOPimsc_admImageStatus_CA. 
+On these coarray images the ImageActivityFlag is permanently checked for it's actual value. If it has value InitializeSegmentSynchronization, set the ImageActivityFlag on these images to value WaitForSegmentSynchronization and signal to the remote image 1 atomically that the ImageActivityFlag of the executing image is set to state WaitForSegmentSynchronization. The following code snippets are taken from subroutine IIimma_SYNC_CheckActivityFlag in Module OOOPimma_admImageManager.f90 and from subroutine OOOPimsc_Start_SegmentSynchronization_CA in Module OOOPimsc_admImageStatus_CA.f90. 
 ```fortran
   do ! check the ImageActivityFlag in local PGAS memory permanently until it has
      !         value OOOPimscEnum_ImageActivityFlag % ExecutionFinished
@@ -102,7 +102,8 @@ All the involved remote images (2, 3, and 4) have atomically signaled that they 
     !
     if (all(logA_CheckImageStates)) exit ! exit the do loop if all involved remote images are in state
                                          ! WaitForSegmentSynchronization 
-    ! (be aware: this would be error prone in real world programming, but it is safe for this example program)
+    ! (be aware: due to the first if statement, this would be error prone in real world programming, 
+    !  but it is safe for this example program)
   end do
 write(*,*) 'step 3: on image', this_image()
   !
